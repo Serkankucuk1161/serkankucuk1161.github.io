@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering Unit Converter</title>
+<meta name="description" content="Convert engineering units: length, pressure, force, torque, energy, power, temperature, flow, thermal properties and more. SI and US customary.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F3F5F4;--ink:#12202B;--blue:#1F5FBF;--rule:#C5CFD3;--muted:#4D5E6A;--card:#fff;--soft:#E6EDF7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5}
+a{color:var(--blue);text-underline-offset:3px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.sheet{max-width:1080px;margin:24px auto;padding:0 20px}
+.frame{border:2px solid var(--ink)}
+header{padding:clamp(24px,5vw,48px) clamp(20px,4vw,48px);border-bottom:2px solid var(--ink)}
+h1{margin:0;font-size:clamp(34px,7vw,68px);line-height:1;font-weight:800;font-stretch:80%;letter-spacing:-.02em}
+header p{margin:12px 0 0;color:var(--muted);max-width:40em}
+.layout{display:grid;grid-template-columns:1fr}
+@media(min-width:860px){.layout{grid-template-columns:230px 1fr}}
+
+/* Category list */
+.cats{display:flex;flex-wrap:wrap;gap:6px;padding:16px clamp(16px,3vw,24px);border-bottom:1px solid var(--rule);margin:0;list-style:none}
+@media(min-width:860px){.cats{flex-direction:column;flex-wrap:nowrap;gap:0;padding:12px 0;border-bottom:0;border-right:2px solid var(--ink)}}
+.cats button{border:1px solid var(--rule);background:var(--card);padding:6px 12px;cursor:pointer;text-align:left}
+.cats button:hover{border-color:var(--blue)}
+.cats button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media(min-width:860px){
+  .cats button{border:0;border-left:4px solid transparent;background:transparent;padding:8px 20px;width:100%}
+  .cats button:hover{background:var(--soft)}
+  .cats button[aria-pressed="true"]{border-left-color:var(--blue);background:var(--soft);color:var(--ink);font-weight:700}
+}
+
+/* Converter panel */
+.panel{padding:clamp(20px,4vw,40px)}
+.cat-title{margin:0 0 18px;font-size:22px}
+.conv{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:700px){.conv{grid-template-columns:1fr auto 1fr;align-items:end}}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;color:var(--muted);font-weight:600}
+.field .box{display:grid;gap:8px}
+.num{width:100%;padding:12px 14px;border:2px solid var(--ink);background:var(--card);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;min-height:56px}
+.num[readonly]{background:var(--soft);cursor:text}
+.num.bad{border-color:#B3261E}
+select{width:100%;padding:10px 12px;border:1px solid var(--ink);background:var(--card);cursor:pointer}
+.swap{border:2px solid var(--ink);background:var(--card);width:48px;height:48px;cursor:pointer;font-size:22px;line-height:1;justify-self:center;margin-bottom:2px}
+.swap:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.formula{margin:18px 0 0;padding:12px 14px;background:var(--soft);border-left:4px solid var(--blue);font-variant-numeric:tabular-nums;min-height:48px}
+.tools{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:16px}
+.btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:9px 18px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--blue);border-color:var(--blue)}
+.tools label{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--muted)}
+.tools select{width:auto}
+.hint{color:#B3261E;font-size:15px;margin:8px 0 0}
+.hint:empty{display:none}
+
+/* All units */
+.all-wrap{border-top:1px solid var(--rule);padding:clamp(20px,4vw,40px)}
+.all-wrap h2{margin:0 0 4px;font-size:20px}
+.all-wrap > p{margin:0 0 14px;color:var(--muted);font-size:15px}
+.all{list-style:none;margin:0;padding:0;display:grid;gap:0;grid-template-columns:1fr}
+@media(min-width:700px){.all{grid-template-columns:1fr 1fr;column-gap:24px}}
+.all button{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:12px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:9px 6px;cursor:pointer}
+.all button:hover{background:var(--soft)}
+.all button[aria-current="true"]{background:var(--soft);font-weight:700}
+.all .v{font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center}
+.all .s{display:grid;text-align:right;line-height:1.25}
+.all .s b{font-weight:700}
+.all .s small{color:var(--muted);font-weight:400;font-size:13px}
+.note{padding:16px clamp(20px,4vw,40px) 22px;border-top:2px solid var(--ink);color:var(--muted);font-size:14px}
+.note p{margin:0 0 4px}
+.btn:disabled{opacity:.5;cursor:not-allowed;background:var(--ink);border-color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover:not(:disabled){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.ghost:disabled{background:transparent}
+.topnav{display:flex;flex-wrap:wrap;gap:6px 22px;margin-bottom:14px;font-size:15px;font-weight:600}
+.topnav a{color:var(--ink);text-decoration:none;border-bottom:2px solid transparent}
+.topnav a:hover{border-color:var(--blue)}
+.plan-label{font-size:15px;color:var(--muted)}
+.hist-wrap{border-top:1px solid var(--rule);padding:clamp(20px,4vw,40px)}
+.hist-wrap h2{margin:0 0 6px;font-size:20px}
+.hist-wrap > p{margin:0 0 12px;color:var(--muted);font-size:15px}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:8px 6px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.hist small{color:var(--muted)}
+.pricing{border-top:2px solid var(--ink);padding:clamp(24px,5vw,48px) clamp(20px,4vw,48px)}
+.pricing h2{margin:0;font-size:clamp(26px,4vw,38px);line-height:1.1;font-weight:800;font-stretch:85%}
+.pricing .lead{margin:8px 0 20px;color:var(--muted)}
+.billing{display:inline-flex;border:2px solid var(--ink);margin-bottom:22px}
+.billing button{border:0;background:transparent;padding:8px 18px;cursor:pointer;font-weight:600}
+.billing button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.plans{display:grid;gap:20px;grid-template-columns:1fr}
+@media(min-width:760px){.plans{grid-template-columns:1fr 1fr}}
+.plan{background:var(--card);border:1px solid var(--ink);padding:24px;display:flex;flex-direction:column;gap:14px}
+.plan.pro{border:3px solid var(--blue)}
+.plan h3{margin:0;font-size:22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tag{font-size:13px;font-weight:600;background:var(--soft);padding:2px 10px;border:1px solid var(--rule)}
+.price{font-size:46px;font-weight:800;line-height:1;font-stretch:85%}
+.price small{font-size:17px;font-weight:500;color:var(--muted)}
+.price-note{margin:-6px 0 0;color:var(--muted);font-size:14px;min-height:21px}
+.plan ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;flex:1}
+.plan li{padding-left:26px;position:relative}
+.plan li::before{content:"";position:absolute;left:2px;top:.5em;width:12px;height:6px;border-left:3px solid var(--blue);border-bottom:3px solid var(--blue);transform:rotate(-45deg)}
+.plan .btn{width:100%;text-align:center}
+.demo-note{margin:18px 0 0;color:var(--muted);font-size:14px;max-width:46em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="sheet">
+<div class="frame">
+
+<header>
+  <nav class="topnav" aria-label="Page"><a href="#converter">Converter</a><a href="#pricing">Pricing</a><a href="index.html">Back to portfolio</a></nav>
+  <h1>Engineering unit converter</h1>
+  <p>Convert between SI and US customary units used in mechanical engineering. Pick a quantity, type a value, and choose the units.</p>
+</header>
+
+<div class="layout" id="converter">
+  <ul class="cats" id="cats" aria-label="Quantity"></ul>
+
+  <div>
+    <div class="panel">
+      <h2 class="cat-title" id="catTitle"></h2>
+      <div class="conv">
+        <div class="field">
+          <label for="val">Value</label>
+          <div class="box">
+            <input id="val" class="num" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1">
+            <select id="from" aria-label="From unit"></select>
+          </div>
+        </div>
+        <button class="swap" id="swap" type="button" aria-label="Swap units" title="Swap units">⇄</button>
+        <div class="field">
+          <label for="out">Result</label>
+          <div class="box">
+            <input id="out" class="num" type="text" readonly aria-live="polite">
+            <select id="to" aria-label="To unit"></select>
+          </div>
+        </div>
+      </div>
+      <p class="hint" id="hint" role="status"></p>
+      <p class="formula" id="formula"></p>
+      <div class="tools">
+        <button class="btn" id="copy" type="button">Copy result</button>
+        <button class="btn ghost" id="save" type="button">Save to history</button>
+        <label for="sig">Significant digits
+          <select id="sig"></select>
+        </label>
+        <span class="plan-label" id="planLabel"></span>
+      </div>
+    </div>
+
+    <div class="all-wrap">
+      <h2>Same value in every unit</h2>
+      <p>Click a row to use it as the result unit.</p>
+      <ul class="all" id="all"></ul>
+    </div>
+
+    <div class="hist-wrap" id="historyPanel">
+      <h2>Conversion history</h2>
+      <p id="histMsg"></p>
+      <ul class="hist" id="hist"></ul>
+      <div class="tools" id="histTools">
+        <button class="btn ghost" id="histCsv" type="button">Download CSV</button>
+        <button class="btn ghost" id="histClear" type="button">Clear history</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="pricing" id="pricing" aria-labelledby="pricingTitle">
+  <h2 id="pricingTitle">Pick a plan</h2>
+  <p class="lead">Start free. Upgrade when you need more precision and a record of your work.</p>
+  <div class="billing" role="group" aria-label="Billing period">
+    <button type="button" id="bMonthly" aria-pressed="true">Monthly</button>
+    <button type="button" id="bYearly" aria-pressed="false">Yearly</button>
+  </div>
+  <div class="plans">
+    <article class="plan" id="planFree">
+      <h3>Free <span class="tag" id="tagFree" hidden>Current plan</span></h3>
+      <div class="price">$0</div>
+      <p class="price-note">No card needed</p>
+      <ul>
+        <li>All 20 quantities</li>
+        <li>Up to 6 significant digits</li>
+        <li>Copy results and see every unit at once</li>
+        <li>Runs in any browser, nothing to install</li>
+      </ul>
+      <button class="btn ghost" id="useFree" type="button">Use Free</button>
+    </article>
+    <article class="plan pro" id="planPro">
+      <h3>Pro <span class="tag" id="tagPro" hidden>Current plan</span></h3>
+      <div class="price"><span id="proPrice">$3</span> <small id="proPer">/month</small></div>
+      <p class="price-note" id="proNote">Cancel any time</p>
+      <ul>
+        <li>Everything in Free</li>
+        <li>Up to 15 significant digits</li>
+        <li>Conversion history (last 20 saved)</li>
+        <li>Export your history as a CSV file</li>
+      </ul>
+      <button class="btn" id="usePro" type="button">Try Pro demo</button>
+    </article>
+  </div>
+  <p class="demo-note">This is a demo for a course project. No payment is taken and no account is created. Switching plans only changes what this page unlocks in your own browser.</p>
+</section>
+
+<div class="note">
+  <p>Notes: cal and kcal are thermochemical (1 cal = 4.184 J). BTU is the International Table BTU. hp is mechanical horsepower (745.7 W). Gallons and quarts are US liquid. Ton is the US short ton (2000 lb). inHg and mmH₂O are conventional values.</p>
+  <p>Always check critical engineering calculations against a trusted reference.</p>
+</div>
+
+</div>
+</div>
+
+<script>
+// Each unit: [name, symbol, factor to the category's SI base unit] or [name, symbol, {to, from}] for non-linear units.
+const CATS = [
+ {id:'length', name:'Length', def:[1,5], units:[
+  ['Meter','m',1],['Millimeter','mm',1e-3],['Centimeter','cm',1e-2],['Kilometer','km',1e3],['Micrometer','µm',1e-6],
+  ['Inch','in',0.0254],['Foot','ft',0.3048],['Yard','yd',0.9144],['Mile','mi',1609.344],['Nautical mile','nmi',1852],['Thou (mil)','mil',2.54e-5]]},
+ {id:'area', name:'Area', def:[1,5], units:[
+  ['Square meter','m²',1],['Square millimeter','mm²',1e-6],['Square centimeter','cm²',1e-4],['Square kilometer','km²',1e6],
+  ['Square inch','in²',6.4516e-4],['Square foot','ft²',0.09290304],['Square yard','yd²',0.83612736],['Acre','ac',4046.8564224],['Hectare','ha',1e4]]},
+ {id:'volume', name:'Volume', def:[1,6], units:[
+  ['Cubic meter','m³',1],['Liter','L',1e-3],['Milliliter','mL',1e-6],['Cubic centimeter','cm³',1e-6],['Cubic millimeter','mm³',1e-9],
+  ['Cubic inch','in³',1.6387064e-5],['Cubic foot','ft³',0.028316846592],['US gallon','gal',0.003785411784],['US quart','qt',9.46352946e-4],
+  ['US fluid ounce','fl oz',2.95735295625e-5],['Oil barrel (42 gal)','bbl',0.158987294928]]},
+ {id:'mass', name:'Mass', def:[0,4], units:[
+  ['Kilogram','kg',1],['Gram','g',1e-3],['Milligram','mg',1e-6],['Metric tonne','t',1000],['Pound','lb',0.45359237],
+  ['Ounce','oz',0.028349523125],['Short ton (US)','ton',907.18474],['Long ton (UK)','long ton',1016.0469088],['Slug','slug',14.59390294]]},
+ {id:'density', name:'Density', def:[0,4], units:[
+  ['Kilogram per cubic meter','kg/m³',1],['Gram per cubic centimeter','g/cm³',1000],['Gram per liter','g/L',1],['Kilogram per liter','kg/L',1000],
+  ['Pound per cubic foot','lb/ft³',16.01846337],['Pound per cubic inch','lb/in³',27679.9047],['Pound per US gallon','lb/gal',119.826427]]},
+ {id:'force', name:'Force', def:[0,4], units:[
+  ['Newton','N',1],['Kilonewton','kN',1e3],['Meganewton','MN',1e6],['Millinewton','mN',1e-3],['Pound-force','lbf',4.4482216152605],
+  ['Kilogram-force','kgf',9.80665],['Kip','kip',4448.2216152605],['Ounce-force','ozf',0.278013850953],['Dyne','dyn',1e-5]]},
+ {id:'pressure', name:'Pressure and stress', def:[5,0], units:[
+  ['Pascal','Pa',1],['Kilopascal','kPa',1e3],['Megapascal','MPa',1e6],['Gigapascal','GPa',1e9],['Bar','bar',1e5],['Millibar','mbar',100],
+  ['Atmosphere','atm',101325],['Pound per square inch','psi',6894.757293168],['Kilopound per square inch','ksi',6894757.293168],
+  ['Kilogram-force per cm²','kgf/cm²',98066.5],['Millimeter of mercury','mmHg',133.322387415],['Torr','Torr',101325/760],
+  ['Inch of mercury','inHg',3386.389],['Millimeter of water','mmH₂O',9.80665]]},
+ {id:'torque', name:'Torque and moment', def:[0,4], units:[
+  ['Newton meter','N·m',1],['Newton millimeter','N·mm',1e-3],['Kilonewton meter','kN·m',1e3],['Pound-force foot','lbf·ft',1.3558179483314],
+  ['Pound-force inch','lbf·in',0.1129848290276],['Kilogram-force meter','kgf·m',9.80665],['Kilogram-force centimeter','kgf·cm',0.0980665],
+  ['Ounce-force inch','ozf·in',0.00706155181]]},
+ {id:'energy', name:'Energy and work', def:[1,5], units:[
+  ['Joule','J',1],['Kilojoule','kJ',1e3],['Megajoule','MJ',1e6],['Gigajoule','GJ',1e9],['Watt hour','Wh',3600],['Kilowatt hour','kWh',3.6e6],
+  ['Calorie','cal',4.184],['Kilocalorie','kcal',4184],['British thermal unit','BTU',1055.05585262],['Foot-pound-force','ft·lbf',1.3558179483314],
+  ['Horsepower hour','hp·h',2684519.537696172],['US therm','therm',105480400],['Electronvolt','eV',1.602176634e-19]]},
+ {id:'power', name:'Power and heat rate', def:[1,4], units:[
+  ['Watt','W',1],['Kilowatt','kW',1e3],['Megawatt','MW',1e6],['Milliwatt','mW',1e-3],['Horsepower (mechanical)','hp',745.69987158227],
+  ['Horsepower (metric)','PS',735.49875],['BTU per hour','BTU/h',1055.05585262/3600],['Kilocalorie per hour','kcal/h',4184/3600],
+  ['Foot-pound-force per second','ft·lbf/s',1.3558179483314],['Ton of refrigeration','TR',3516.8528421]]},
+ {id:'temperature', name:'Temperature', def:[0,2], units:[
+  ['Celsius','°C',{to:v=>v+273.15, from:k=>k-273.15}],
+  ['Kelvin','K',1],
+  ['Fahrenheit','°F',{to:v=>(v-32)*5/9+273.15, from:k=>(k-273.15)*9/5+32}],
+  ['Rankine','°R',5/9]]},
+ {id:'speed', name:'Speed', def:[1,2], units:[
+  ['Meter per second','m/s',1],['Kilometer per hour','km/h',1/3.6],['Mile per hour','mph',0.44704],['Foot per second','ft/s',0.3048],
+  ['Knot','kn',1852/3600],['Millimeter per second','mm/s',1e-3],['Inch per second','in/s',0.0254]]},
+ {id:'flow', name:'Volumetric flow rate', def:[2,5], units:[
+  ['Cubic meter per second','m³/s',1],['Cubic meter per hour','m³/h',1/3600],['Liter per second','L/s',1e-3],['Liter per minute','L/min',1e-3/60],
+  ['Milliliter per minute','mL/min',1e-6/60],['US gallon per minute','gpm',0.003785411784/60],['US gallon per hour','gph',0.003785411784/3600],
+  ['Cubic foot per minute','CFM',0.028316846592/60],['Cubic foot per second','ft³/s',0.028316846592]]},
+ {id:'angle', name:'Angle', def:[1,0], units:[
+  ['Radian','rad',1],['Degree','°',Math.PI/180],['Gradian','gon',Math.PI/200],['Revolution','rev',2*Math.PI],
+  ['Arcminute','′',Math.PI/10800],['Arcsecond','″',Math.PI/648000],['Milliradian','mrad',1e-3]]},
+ {id:'rotation', name:'Rotational speed', def:[1,0], units:[
+  ['Radian per second','rad/s',1],['Revolution per minute','rpm',2*Math.PI/60],['Revolution per second','rev/s',2*Math.PI],
+  ['Degree per second','°/s',Math.PI/180],['Hertz (as angular rate)','Hz',2*Math.PI]]},
+ {id:'time', name:'Time', def:[2,3], units:[
+  ['Second','s',1],['Millisecond','ms',1e-3],['Minute','min',60],['Hour','h',3600],['Day','d',86400],['Week','wk',604800],['Year (365.25 d)','yr',31557600]]},
+ {id:'conductivity', name:'Thermal conductivity', def:[0,2], units:[
+  ['Watt per meter kelvin','W/(m·K)',1],['Kilocalorie per hour meter °C','kcal/(h·m·°C)',4184/3600],
+  ['BTU per hour foot °F','BTU/(h·ft·°F)',1.730734666],['BTU inch per hour ft² °F','BTU·in/(h·ft²·°F)',1.730734666/12],
+  ['Calorie per second cm °C','cal/(s·cm·°C)',418.4]]},
+ {id:'htc', name:'Heat transfer coefficient', def:[0,1], units:[
+  ['Watt per m² kelvin','W/(m²·K)',1],['BTU per hour ft² °F','BTU/(h·ft²·°F)',5.678263341],
+  ['Kilocalorie per hour m² °C','kcal/(h·m²·°C)',4184/3600],['Calorie per second cm² °C','cal/(s·cm²·°C)',41840]]},
+ {id:'specificheat', name:'Specific heat', def:[1,2], units:[
+  ['Joule per kg kelvin','J/(kg·K)',1],['Kilojoule per kg kelvin','kJ/(kg·K)',1000],['BTU per pound °F','BTU/(lb·°F)',4186.8],
+  ['Calorie per gram °C','cal/(g·°C)',4184],['Kilocalorie per kg K','kcal/(kg·K)',4184]]},
+ {id:'viscosity', name:'Dynamic viscosity', def:[0,1], units:[
+  ['Pascal second','Pa·s',1],['Millipascal second','mPa·s',1e-3],['Centipoise','cP',1e-3],['Poise','P',0.1],
+  ['Pound per foot second','lb/(ft·s)',1.488163944],['Pound-force second per ft²','lbf·s/ft²',47.88025898]]},
+ {id:'kinviscosity', name:'Kinematic viscosity', def:[0,1], units:[
+  ['Square meter per second','m²/s',1],['Square millimeter per second','mm²/s',1e-6],['Centistokes','cSt',1e-6],['Stokes','St',1e-4],
+  ['Square foot per second','ft²/s',0.09290304]]}
+];
+
+const $ = id => document.getElementById(id);
+const el = {cats:$('cats'),title:$('catTitle'),val:$('val'),out:$('out'),from:$('from'),to:$('to'),swap:$('swap'),
+  formula:$('formula'),hint:$('hint'),all:$('all'),sig:$('sig'),copy:$('copy')};
+let cat = CATS[0];
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+let pro = store.get('ucPlan')==='pro';
+let yearly = false;
+let convLog = [];
+try{ convLog = JSON.parse(store.get('ucHistory')||'[]'); if(!Array.isArray(convLog)) convLog=[]; }catch(e){ convLog=[]; }
+const FREE_DIGITS=[4,6], PRO_DIGITS=[4,6,8,10,12,15];
+
+function toBase(v,u){ const f=u[2]; return typeof f==='number' ? v*f : f.to(v); }
+function fromBase(b,u){ const f=u[2]; return typeof f==='number' ? b/f : f.from(b); }
+function convert(v,a,b){ return fromBase(toBase(v,a),b); }
+
+function fmt(x){
+  const sig = +el.sig.value;
+  if(!isFinite(x)) return '—';
+  if(x===0) return '0';
+  const a = Math.abs(x);
+  if(a>=1e12 || a<1e-6) return x.toExponential(sig-1).replace(/\.?0+e/,'e').replace('e+','e');
+  return String(Number(x.toPrecision(sig)));
+}
+
+function parse(s){
+  s = s.trim().replace(/\s/g,'');
+  if(s==='') return NaN;
+  if(s.includes(',') && !s.includes('.')) s = s.replace(',','.'); // 3,5 -> 3.5
+  else s = s.replace(/,/g,'');                                    // 1,000.5 -> 1000.5
+  return /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s) ? Number(s) : NaN;
+}
+
+function buildCats(){
+  CATS.forEach(c=>{
+    const li=document.createElement('li');
+    const b=document.createElement('button');
+    b.type='button'; b.textContent=c.name; b.dataset.id=c.id; b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',()=>selectCat(c.id));
+    li.appendChild(b); el.cats.appendChild(li);
+  });
+}
+
+function selectCat(id, keepValue){
+  cat = CATS.find(c=>c.id===id) || CATS[0];
+  el.cats.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.id===cat.id)));
+  el.title.textContent = cat.name;
+  [el.from,el.to].forEach(sel=>{
+    sel.innerHTML='';
+    cat.units.forEach((u,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=`${u[0]} (${u[1]})`; sel.appendChild(o); });
+  });
+  el.from.value = cat.def[0]; el.to.value = cat.def[1];
+  history.replaceState(null,'','#'+cat.id);
+  update();
+}
+
+function update(){
+  const a=cat.units[+el.from.value], b=cat.units[+el.to.value];
+  const v=parse(el.val.value);
+  const bad = isNaN(v);
+  el.val.classList.toggle('bad', bad && el.val.value.trim()!=='');
+  el.hint.textContent = (bad && el.val.value.trim()!=='') ? 'Enter a number, for example 12.5 or 3e-4.' : '';
+  el.out.value = bad ? '' : fmt(convert(v,a,b));
+  el.formula.textContent = `1 ${a[1]} = ${fmt(convert(1,a,b))} ${b[1]}`;
+  el.all.innerHTML='';
+  cat.units.forEach((u,i)=>{
+    const li=document.createElement('li'), btn=document.createElement('button');
+    btn.type='button';
+    if(i===+el.to.value) btn.setAttribute('aria-current','true');
+    const left=document.createElement('span'); left.className='v'; left.textContent = bad ? '—' : fmt(convert(v,a,u));
+    const right=document.createElement('span'); right.className='s';
+    const sy=document.createElement('b'); sy.textContent=u[1]; const nm=document.createElement('small'); nm.textContent=u[0]; right.append(sy,nm);
+    btn.append(left,right);
+    btn.addEventListener('click',()=>{ el.to.value=i; update(); });
+    li.appendChild(btn); el.all.appendChild(li);
+  });
+}
+
+el.val.addEventListener('input',update);
+el.from.addEventListener('change',update);
+el.to.addEventListener('change',update);
+el.sig.addEventListener('change',update);
+el.swap.addEventListener('click',()=>{ const t=el.from.value; el.from.value=el.to.value; el.to.value=t; update(); });
+el.copy.addEventListener('click',async()=>{
+  if(!el.out.value) return;
+  try{ await navigator.clipboard.writeText(el.out.value); el.copy.textContent='Copied'; }
+  catch(e){ el.out.select(); el.copy.textContent='Press Ctrl+C'; }
+  setTimeout(()=>el.copy.textContent='Copy result',1600);
+});
+
+function buildSig(){
+  const opts = pro ? PRO_DIGITS : FREE_DIGITS;
+  const cur = +el.sig.value;
+  el.sig.innerHTML='';
+  opts.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; el.sig.appendChild(o); });
+  el.sig.value = opts.includes(cur) ? cur : (pro ? 8 : 6);
+}
+
+function renderHistory(){
+  const list=$('hist'); list.innerHTML='';
+  $('histMsg').textContent = !pro ? 'Conversion history is part of Pro. Try the Pro demo in the pricing section below.'
+    : (convLog.length ? 'Your last saved conversions, newest first.' : 'Nothing saved yet. Press "Save to history" after a conversion.');
+  convLog.forEach(e=>{
+    const li=document.createElement('li');
+    const a=document.createElement('span'); a.textContent=`${e.v} ${e.f} = ${e.r} ${e.to}`;
+    const b=document.createElement('small'); b.textContent=`${e.q}, ${new Date(e.t).toLocaleString()}`;
+    li.append(a,b); list.appendChild(li);
+  });
+  list.hidden = !pro;
+  $('histTools').hidden = !pro || !convLog.length;
+}
+
+function applyPlanUI(){
+  $('planLabel').textContent = pro ? 'Plan: Pro' : 'Plan: Free';
+  el.save.disabled = !pro;
+  el.save.textContent = pro ? 'Save to history' : 'Save to history (Pro)';
+  $('tagFree').hidden = pro; $('tagPro').hidden = !pro;
+  $('useFree').disabled = !pro; $('useFree').textContent = pro ? 'Use Free' : 'Current plan';
+  $('usePro').disabled = pro;   $('usePro').textContent  = pro ? 'Current plan' : 'Try Pro demo';
+  $('bMonthly').setAttribute('aria-pressed', String(!yearly));
+  $('bYearly').setAttribute('aria-pressed', String(yearly));
+  $('proPrice').textContent = yearly ? '$30' : '$3';
+  $('proPer').textContent   = yearly ? '/year' : '/month';
+  $('proNote').textContent  = yearly ? 'That is $2.50 per month, 2 months free' : 'Cancel any time';
+  renderHistory();
+}
+
+function setPlan(p){
+  pro = p; store.set('ucPlan', p ? 'pro' : 'free');
+  buildSig(); applyPlanUI(); update();
+}
+
+function saveHistory(){
+  const a=cat.units[+el.from.value], b=cat.units[+el.to.value];
+  if(!pro || !el.out.value) return;
+  convLog.unshift({t:new Date().toISOString(), q:cat.name, v:el.val.value.trim(), f:a[1], r:el.out.value, to:b[1]});
+  convLog = convLog.slice(0,20);
+  store.set('ucHistory', JSON.stringify(convLog));
+  renderHistory();
+}
+
+function downloadCsv(){
+  const q = s => '"' + String(s).replace(/"/g,'""') + '"';
+  const rows = [['time','quantity','value','from','result','to'].join(',')]
+    .concat(convLog.map(e=>[e.t,e.q,e.v,e.f,e.r,e.to].map(q).join(',')));
+  const blob = new Blob(['\uFEFF'+rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='conversion-history.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+el.save = $('save');
+el.save.addEventListener('click', saveHistory);
+$('histCsv').addEventListener('click', downloadCsv);
+$('histClear').addEventListener('click', ()=>{ convLog=[]; store.set('ucHistory','[]'); renderHistory(); });
+$('useFree').addEventListener('click', ()=>setPlan(false));
+$('usePro').addEventListener('click', ()=>setPlan(true));
+$('bMonthly').addEventListener('click', ()=>{ yearly=false; applyPlanUI(); });
+$('bYearly').addEventListener('click', ()=>{ yearly=true; applyPlanUI(); });
+
+buildCats();
+buildSig();
+applyPlanUI();
+selectCat(location.hash.slice(1) || CATS[0].id);
+</script>
+</body>
+</html>
